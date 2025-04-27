@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla Comparativa</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div>
+        <h1>Características del Producto</h1>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th id="precio-total" colspan="1">Precio Total: $875</th>
+            </tr>
+            <tr>
+                <th>Características</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <label for="marca">Marca:</label>
+                    <select id="marca" name="marca">
+                        <option value="veka" data-precio="0">Veka</option>
+                        <option value="kommerling" data-precio="100">Kommerling</option>
+                        <option value="rehau" data-precio="150">Rehau</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="vidrio">Vidrio:</label>
+                    <select id="vidrio" name="vidrio">
+                        <option value="4/16/4" data-precio="0">4/16/4</option>
+                        <option value="6/12/6" data-precio="50">6/12/6</option>
+                        <option value="8/10/8" data-precio="100">8/10/8</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="tratamiento-termico">Tratamiento térmico:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="tratamiento-termico" name="tratamiento-termico" data-precio="75">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="tratamiento-acustico">Tratamiento acústico:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="tratamiento-acustico" name="tratamiento-acustico" data-precio="50">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="serie">Serie:</label>
+                    <select id="serie" name="serie">
+                        <option value="70mm" data-precio="0">70 mm</option>
+                        <option value="80mm" data-precio="50">80 mm</option>
+                        <option value="90mm" data-precio="100">90 mm</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="instalacion">Instalación incluida:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="instalacion" name="instalacion" data-precio="200">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="resumen">
+        <h2>Resumen de opciones seleccionadas:</h2>
+        <div id="resumen-contenedor">
+            <div id="lista-resumen">
+                <!-- Aquí se agregarán las opciones seleccionadas dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <div id="sugerencias">
+        <!-- Aquí se mostrarán las sugerencias dinámicamente -->
+    </div>
+
+    <!-- Coloca el script aquí -->
+    <script src="precios.js"></script>
+</body>
+</html>
