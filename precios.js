@@ -25,40 +25,25 @@ function actualizarPrecioTotalYResumen() {
 
     // Siempre añade la opción seleccionada al resumen
     const p = document.createElement("p");
-    if (precioAdicional > 0) {
-      p.textContent = `${select.name}: ${selectedOption.text} (+$${precioAdicional})`;
-    } else {
-      p.textContent = `${select.name}: ${selectedOption.text}`;
-    }
-    listaResumen.appendChild(p);
+    p.classList.add("mb-1"); // Clase de Bootstrap para reducir el margen inferior
 
-    // Añade una descripción adicional para ciertas opciones seleccionadas
-    const descripcion = document.createElement("p");
-    descripcion.classList.add("descripcion");
+    if (select.name === "marca") {
+      // Crear enlace dinámico para la marca
+      const url = selectedOption.getAttribute("data-url");
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.textContent = selectedOption.text; // El texto de la marca será un enlace
+      p.textContent = `${select.name}: `;
+      p.appendChild(link); // Añade el enlace al texto
+      if (precioAdicional > 0) {
+        p.innerHTML += ` (+$${precioAdicional})`;
+      }
+      listaResumen.appendChild(p);
 
-    if (select.name === "serie") {
-      if (selectedOption.value === "70mm") {
-        descripcion.textContent =
-          "La serie 70 mm es ideal para proyectos estándar.";
-      } else if (selectedOption.value === "80mm") {
-        descripcion.textContent =
-          "La serie 80 mm ofrece un mejor aislamiento térmico.";
-      } else if (selectedOption.value === "90mm") {
-        descripcion.textContent =
-          "La serie 90 mm proporciona el mejor rendimiento en aislamiento.";
-      }
-    } else if (select.name === "vidrio") {
-      if (selectedOption.value === "4/16/4") {
-        descripcion.textContent =
-          "El vidrio 4/16/4 es adecuado para un aislamiento básico.";
-      } else if (selectedOption.value === "6/12/6") {
-        descripcion.textContent =
-          "El vidrio 6/12/6 mejora el aislamiento térmico y acústico.";
-      } else if (selectedOption.value === "8/10/8") {
-        descripcion.textContent =
-          "El vidrio 8/10/8 ofrece máxima resistencia y aislamiento.";
-      }
-    } else if (select.name === "marca") {
+      // Añadir descripción de la marca
+      const descripcion = document.createElement("p");
+      descripcion.classList.add("text-muted", "mb-3", "ms-3"); // Estilo Bootstrap para descripción
       if (selectedOption.value === "kommerling") {
         descripcion.textContent =
           "Kommerling garantiza calidad alemana y excelente aislamiento.";
@@ -69,10 +54,61 @@ function actualizarPrecioTotalYResumen() {
         descripcion.textContent =
           "Veka es conocida por su diseño elegante y durabilidad.";
       }
-    }
+      listaResumen.appendChild(descripcion);
+    } else if (select.name === "serie") {
+      // Crear enlace dinámico para la serie
+      const serieUrl = {
+        "70mm": "https://www.veka.com/70mm", // Enlace de ejemplo para la serie 70mm
+        "80mm": "https://www.kommerling.com/80mm", // Enlace de ejemplo para la serie 80mm
+        "90mm": "https://www.rehau.com/90mm", // Enlace de ejemplo para la serie 90mm
+      };
+      const url = serieUrl[selectedOption.value] || "#"; // Usa "#" si no hay enlace definido
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.textContent = selectedOption.text; // El texto de la serie será un enlace
+      p.textContent = `${select.name}: `;
+      p.appendChild(link); // Añade el enlace al texto
+      if (precioAdicional > 0) {
+        p.innerHTML += ` (+$${precioAdicional})`;
+      }
+      listaResumen.appendChild(p);
 
-    // Solo añade la descripción si no es la opción por defecto
-    if (descripcion.textContent) {
+      // Añadir descripción de la serie
+      const descripcion = document.createElement("p");
+      descripcion.classList.add("text-muted", "mb-3", "ms-3"); // Estilo Bootstrap para descripción
+      if (selectedOption.value === "70mm") {
+        descripcion.textContent =
+          "La serie 70 mm es ideal para proyectos estándar.";
+      } else if (selectedOption.value === "80mm") {
+        descripcion.textContent =
+          "La serie 80 mm ofrece un mejor aislamiento térmico.";
+      } else if (selectedOption.value === "90mm") {
+        descripcion.textContent =
+          "La serie 90 mm proporciona el mejor rendimiento en aislamiento.";
+      }
+      listaResumen.appendChild(descripcion);
+    } else if (select.name === "vidrio") {
+      if (precioAdicional > 0) {
+        p.textContent = `${select.name}: ${selectedOption.text} (+$${precioAdicional})`;
+      } else {
+        p.textContent = `${select.name}: ${selectedOption.text}`;
+      }
+      listaResumen.appendChild(p);
+
+      // Añadir descripción del vidrio
+      const descripcion = document.createElement("p");
+      descripcion.classList.add("text-muted", "mb-3", "ms-3"); // Estilo Bootstrap para descripción
+      if (selectedOption.value === "4/16/4") {
+        descripcion.textContent =
+          "El vidrio 4/16/4 es adecuado para un aislamiento básico.";
+      } else if (selectedOption.value === "6/12/6") {
+        descripcion.textContent =
+          "El vidrio 6/12/6 mejora el aislamiento térmico y acústico.";
+      } else if (selectedOption.value === "8/10/8") {
+        descripcion.textContent =
+          "El vidrio 8/10/8 ofrece máxima resistencia y aislamiento.";
+      }
       listaResumen.appendChild(descripcion);
     }
 
