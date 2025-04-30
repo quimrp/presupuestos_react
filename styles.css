@@ -1,4 +1,4 @@
-.select2-container--bootstrap-5 .select2-selection {
+ton  .select2-container--bootstrap-5 .select2-selection {
     display: flex;
     align-items: center;
     border: 1px solid #ced4da;
@@ -108,3 +108,43 @@
     background-color: #0d6efd; /* Color del switch activado */
     border-color: #0d6efd; /* Borde del switch activado */
   }
+
+  /* Estilo para la lista de sugerencias */
+  #lista-sugerencias {
+    margin-top: 1rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Estilo para los elementos de la lista */
+  .list-group-item {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Estilo para los botones de activar */
+  .activar-mejora {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .sugerencia-item {
+    padding: 10px;
+    border: 2px solid #dee2e6;
+    border-radius: 5px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sugerencia-item span {
+    flex: 1;
+    margin-right: 15px;
+  }
+.caracteristicas_tecnicas {
+  padding-left: 20px;
+  padding-right: 20px;
+}

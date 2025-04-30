@@ -8,6 +8,9 @@ $(document).ready(function () {
     escapeMarkup: function (markup) {
       return markup; // Permite HTML en las opciones
     },
+  }).on('select2:select', function(e) {
+    // Disparar el evento change nativo
+    this.dispatchEvent(new Event('change'));
   });
 
   // Función para formatear las opciones en el menú desplegable

@@ -11,184 +11,236 @@ const precioTotalElement = document.getElementById("precio-total");
 // Referencia al contenedor del resumen
 const listaResumen = document.getElementById("lista-resumen");
 
+// Función para crear un elemento de mejora
+function crearElementoMejora(checkbox, itemCount = 0, isActivated = false) {
+  const precio = parseInt(checkbox.dataset.precio, 10);
+  const accordionItem = document.createElement("div");
+  accordionItem.className = "accordion-item";
+
+  const itemId = `mejora-${checkbox.id}-${itemCount}`;
+  const headerId = `heading-${itemId}`;
+  const collapseId = `collapse-${itemId}`;
+
+  accordionItem.innerHTML = `
+    <h2 class="accordion-header" id="${headerId}">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+              data-bs-target="#${collapseId}" aria-expanded="false" 
+              aria-controls="${collapseId}">
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <span>${checkbox.name}${isActivated ? ': Sí' : ''}</span>
+          <span class="badge bg-primary ms-2">+$${precio}</span>
+        </div>
+      </button>
+    </h2>
+    <div id="${collapseId}" class="accordion-collapse collapse" 
+         aria-labelledby="${headerId}" data-bs-parent="#${isActivated ? 'resumenAccordion' : 'sugerenciasInnerAccordion'}">
+      <div class="accordion-body">
+        <p class="mb-3">${getDescripcionCheckbox(checkbox.name)}</p>
+        ${!isActivated ? `
+          <button class="btn btn-outline-primary btn-sm" 
+                  onclick="document.getElementById('${checkbox.id}').click()">
+            Activar esta mejora
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  return accordionItem;
+}
+
 // Función para actualizar el precio total y el resumen
 function actualizarPrecioTotalYResumen() {
   let precioTotal = precioBase;
-  listaResumen.innerHTML = ""; // Limpia el resumen actual
-  const sugerenciasDiv = document.getElementById("sugerencias");
-  sugerenciasDiv.innerHTML = ""; // Limpia las sugerencias actuales
+  listaResumen.innerHTML = "";
+  
+  const accordion = document.createElement("div");
+  accordion.className = "accordion";
+  accordion.id = "resumenAccordion";
+  
+  let itemCount = 0;
 
-  // Suma los precios adicionales de todos los selects y actualiza el resumen
+  // Procesar los selects
   selects.forEach((select) => {
     const selectedOption = select.options[select.selectedIndex];
     const precioAdicional = parseInt(selectedOption.dataset.precio, 10) || 0;
+    
+    const accordionItem = document.createElement("div");
+    accordionItem.className = "accordion-item";
 
-    // Siempre añade la opción seleccionada al resumen
-    const p = document.createElement("p");
-    p.classList.add("mb-1"); // Clase de Bootstrap para reducir el margen inferior
+    const headerId = `heading${itemCount}`;
+    const collapseId = `collapse${itemCount}`;
 
-    if (select.name === "marca") {
-      // Crear enlace dinámico para la marca
-      const url = selectedOption.getAttribute("data-url");
-      const link = document.createElement("a");
-      link.href = url;
-      link.target = "_blank";
-      link.textContent = selectedOption.text; // El texto de la marca será un enlace
-      p.textContent = `${select.name}: `;
-      p.appendChild(link); // Añade el enlace al texto
-      if (precioAdicional > 0) {
-        p.innerHTML += ` (+$${precioAdicional})`;
-      }
-      listaResumen.appendChild(p);
-
-      // Añadir descripción de la marca
-      const descripcion = document.createElement("p");
-      descripcion.classList.add("text-muted", "mb-3", "ms-3"); // Estilo Bootstrap para descripción
-      if (selectedOption.value === "kommerling") {
-        descripcion.textContent =
-          "Kommerling garantiza calidad alemana y excelente aislamiento.";
-      } else if (selectedOption.value === "rehau") {
-        descripcion.textContent =
-          "Rehau ofrece una excelente relación calidad-precio.";
-      } else if (selectedOption.value === "veka") {
-        descripcion.textContent =
-          "Veka es conocida por su diseño elegante y durabilidad.";
-      }
-      listaResumen.appendChild(descripcion);
-    } else if (select.name === "serie") {
-      // Crear enlace dinámico para la serie
-      const serieUrl = {
-        "70mm": "https://www.veka.com/70mm", // Enlace de ejemplo para la serie 70mm
-        "80mm": "https://www.kommerling.com/80mm", // Enlace de ejemplo para la serie 80mm
-        "90mm": "https://www.rehau.com/90mm", // Enlace de ejemplo para la serie 90mm
-      };
-      const url = serieUrl[selectedOption.value] || "#"; // Usa "#" si no hay enlace definido
-      const link = document.createElement("a");
-      link.href = url;
-      link.target = "_blank";
-      link.textContent = selectedOption.text; // El texto de la serie será un enlace
-      p.textContent = `${select.name}: `;
-      p.appendChild(link); // Añade el enlace al texto
-      if (precioAdicional > 0) {
-        p.innerHTML += ` (+$${precioAdicional})`;
-      }
-      listaResumen.appendChild(p);
-
-      // Añadir descripción de la serie
-      const descripcion = document.createElement("p");
-      descripcion.classList.add("text-muted", "mb-3", "ms-3"); // Estilo Bootstrap para descripción
-      if (selectedOption.value === "70mm") {
-        descripcion.textContent =
-          "La serie 70 mm es ideal para proyectos estándar.";
-      } else if (selectedOption.value === "80mm") {
-        descripcion.textContent =
-          "La serie 80 mm ofrece un mejor aislamiento térmico.";
-      } else if (selectedOption.value === "90mm") {
-        descripcion.textContent =
-          "La serie 90 mm proporciona el mejor rendimiento en aislamiento.";
-      }
-      listaResumen.appendChild(descripcion);
-    } else if (select.name === "vidrio") {
-      if (precioAdicional > 0) {
-        p.textContent = `${select.name}: ${selectedOption.text} (+$${precioAdicional})`;
-      } else {
-        p.textContent = `${select.name}: ${selectedOption.text}`;
-      }
-      listaResumen.appendChild(p);
-
-      // Añadir descripción del vidrio
-      const descripcion = document.createElement("p");
-      descripcion.classList.add("text-muted", "mb-3", "ms-3"); // Estilo Bootstrap para descripción
-      if (selectedOption.value === "4/16/4") {
-        descripcion.textContent =
-          "El vidrio 4/16/4 es adecuado para un aislamiento básico.";
-      } else if (selectedOption.value === "6/12/6") {
-        descripcion.textContent =
-          "El vidrio 6/12/6 mejora el aislamiento térmico y acústico.";
-      } else if (selectedOption.value === "8/10/8") {
-        descripcion.textContent =
-          "El vidrio 8/10/8 ofrece máxima resistencia y aislamiento.";
-      }
-      listaResumen.appendChild(descripcion);
+    // Contenido especial para la serie 70mm
+    if (select.name === "serie" && selectedOption.value === "70mm") {
+      accordionItem.innerHTML = `
+        <h2 class="accordion-header" id="${headerId}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                  data-bs-target="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+            ${select.name}: ${selectedOption.text}${precioAdicional > 0 ? ` (+$${precioAdicional})` : ''}
+          </button>
+        </h2>
+        <div id="${collapseId}" class="accordion-collapse collapse" 
+             aria-labelledby="${headerId}" data-bs-parent="#resumenAccordion">
+          <div class="accordion-body">
+            <p class="mb-3">La serie 70 mm es ideal para proyectos estándar.</p>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <img src="./assets/images/ventana-practicable-70.jpg" 
+                       class="card-img-top" 
+                       alt="Ventana Practicable Serie 70"
+                       onerror="this.src='./assets/images/placeholder.jpg'">
+                  <div class="card-body">
+                    <h5 class="card-title">Ventana Practicable</h5>
+                    <p class="card-text">Sistema de apertura tradicional.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <img src="./assets/images/veka_welcome_center___logo_veka_aktiengesellschaft_res_1_1_w400.jpg" 
+                       class="card-img-top" 
+                       alt="Ventana Oscilobatiente Serie 70"
+                       onerror="this.src='./assets/images/placeholder.jpg'">
+                  <div class="card-body">
+                    <h5 class="card-title">Ventana Oscilobatiente</h5>
+                    <p class="card-text">Doble sistema de apertura.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <img src="./assets/images/ventana-corredera-70.jpg" 
+                       class="card-img-top" 
+                       alt="Ventana Corredera Serie 70"
+                       onerror="this.src='./assets/images/placeholder.jpg'">
+                  <div class="card-body">
+                    <h5 class="card-title">Corredera</h5>
+                    <p class="card-text">Sistema de apertura deslizante.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Contenido normal para otros selects
+      accordionItem.innerHTML = `
+        <h2 class="accordion-header" id="${headerId}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                  data-bs-target="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+            ${select.name}: ${selectedOption.text}${precioAdicional > 0 ? ` (+$${precioAdicional})` : ''}
+          </button>
+        </h2>
+        <div id="${collapseId}" class="accordion-collapse collapse" 
+             aria-labelledby="${headerId}" data-bs-parent="#resumenAccordion">
+          <div class="accordion-body">
+            ${getDescripcionSelect(select.name, selectedOption.value)}
+          </div>
+        </div>
+      `;
     }
 
-    // Suma el precio adicional al total si es mayor a 0
+    accordion.appendChild(accordionItem);
+    itemCount++;
     precioTotal += precioAdicional;
   });
 
-  // Suma los precios adicionales de todos los checkboxes activados y actualiza el resumen
+  // Procesar los checkboxes activados
   checkboxes.forEach((checkbox) => {
-    const precioAdicional = parseInt(checkbox.dataset.precio, 10) || 0;
-
     if (checkbox.checked) {
-      // Añade la opción seleccionada al resumen
-      const p = document.createElement("p");
-      if (precioAdicional > 0) {
-        p.textContent = `${checkbox.name}: Sí (+$${precioAdicional})`;
-      } else {
-        p.textContent = `${checkbox.name}: Sí`;
-      }
-      listaResumen.appendChild(p);
-
-      // Añade una descripción adicional para ciertos checkboxes
-      const descripcion = document.createElement("p");
-      descripcion.classList.add("descripcion");
-      if (checkbox.name === "tratamiento-termico") {
-        descripcion.textContent =
-          "El tratamiento térmico mejora la eficiencia energética.";
-      } else if (checkbox.name === "tratamiento-acustico") {
-        descripcion.textContent =
-          "El tratamiento acústico reduce significativamente el ruido exterior.";
-      } else if (checkbox.name === "instalacion") {
-        descripcion.textContent =
-          "La instalación incluida garantiza un montaje profesional.";
-      }
-      listaResumen.appendChild(descripcion);
-
-      // Suma el precio adicional al total
-      precioTotal += precioAdicional;
+      accordion.appendChild(crearElementoMejora(checkbox, itemCount, true));
+      precioTotal += parseInt(checkbox.dataset.precio, 10) || 0;
+      itemCount++;
     }
   });
 
-  // Genera sugerencias si ciertas opciones no están seleccionadas
-  let haySugerencias = false;
-
-  if (!document.getElementById("tratamiento-termico").checked) {
-    const sugerenciaTermica = document.createElement("p");
-    sugerenciaTermica.textContent =
-      "Por $100, el aislamiento térmico mejoraría significativamente la eficiencia energética.";
-    sugerenciasDiv.appendChild(sugerenciaTermica);
-    haySugerencias = true;
-  }
-
-  if (!document.getElementById("tratamiento-acustico").checked) {
-    const sugerenciaAcustica = document.createElement("p");
-    sugerenciaAcustica.textContent =
-      "Por $50, el aislamiento acústico reduciría significativamente el ruido exterior.";
-    sugerenciasDiv.appendChild(sugerenciaAcustica);
-    haySugerencias = true;
-  }
-
-  if (!document.getElementById("instalacion").checked) {
-    const sugerenciaInstalacion = document.createElement("p");
-    sugerenciaInstalacion.textContent =
-      "Por $200, incluir la instalación garantizaría un montaje profesional.";
-    sugerenciasDiv.appendChild(sugerenciaInstalacion);
-    haySugerencias = true;
-  }
-
-  // Añade el título dinámicamente si hay sugerencias
-  if (haySugerencias) {
-    const tituloSugerencias = document.createElement("h2");
-    tituloSugerencias.textContent = "Lo que podrías mejorar:";
-    sugerenciasDiv.prepend(tituloSugerencias); // Añade el título al inicio del contenedor
-    sugerenciasDiv.style.display = "block"; // Muestra el contenedor si hay sugerencias
-  } else {
-    sugerenciasDiv.style.display = "none"; // Oculta el contenedor si no hay sugerencias
-  }
-
-  // Actualiza el texto del precio total en la tabla
+  listaResumen.appendChild(accordion);
+  mostrarSugerencias();
   precioTotalElement.textContent = `Precio Total: $${precioTotal}`;
+}
+
+// Función auxiliar para obtener descripciones de selects
+function getDescripcionSelect(tipo, valor) {
+  const descripciones = {
+    marca: {
+      kommerling: "Kommerling garantiza calidad alemana y excelente aislamiento.",
+      rehau: "Rehau ofrece una excelente relación calidad-precio.",
+      veka: "Veka es conocida por su diseño elegante y durabilidad."
+    },
+    serie: {
+      "70mm": "La serie 70 mm es ideal para proyectos estándar.",
+      "80mm": "La serie 80 mm ofrece un mejor aislamiento térmico.",
+      "90mm": "La serie 90 mm proporciona el mejor rendimiento en aislamiento."
+    },
+    vidrio: {
+      "4/16/4": "El vidrio 4/16/4 es adecuado para un aislamiento básico.",
+      "6/12/6": "El vidrio 6/12/6 mejora el aislamiento térmico y acústico.",
+      "8/10/8": "El vidrio 8/10/8 ofrece máxima resistencia y aislamiento."
+    }
+  };
+  return descripciones[tipo]?.[valor] || "";
+}
+
+// Función auxiliar para obtener descripciones de checkboxes
+function getDescripcionCheckbox(nombre) {
+  const descripciones = {
+    "tratamiento-termico": "El tratamiento térmico mejora la eficiencia energética.",
+    "tratamiento-acustico": "El tratamiento acústico reduce significativamente el ruido exterior.",
+    "instalacion": "La instalación incluida garantiza un montaje profesional."
+  };
+  return descripciones[nombre] || "";
+}
+
+// Función para mostrar sugerencias
+function mostrarSugerencias() {
+  const sugerenciasDiv = document.getElementById("sugerencias");
+  sugerenciasDiv.innerHTML = "";
+  
+  const checkboxesSinMarcar = document.querySelectorAll('input[type="checkbox"]:not(:checked)');
+  if (checkboxesSinMarcar.length > 0) {
+    const sugerenciasAccordion = document.createElement("div");
+    sugerenciasAccordion.className = "accordion mt-4";
+    sugerenciasAccordion.id = "sugerenciasAccordion";
+
+    const mainAccordionItem = document.createElement("div");
+    mainAccordionItem.className = "accordion-item";
+
+    mainAccordionItem.innerHTML = `
+      <h2 class="accordion-header" id="headingSugerencias">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#collapseSugerencias" aria-expanded="true" 
+                aria-controls="collapseSugerencias">
+          Mejoras disponibles (${checkboxesSinMarcar.length})
+        </button>
+      </h2>
+      <div id="collapseSugerencias" class="accordion-collapse collapse show" 
+           aria-labelledby="headingSugerencias">
+        <div class="accordion-body p-0">
+          <div class="accordion" id="sugerenciasInnerAccordion">
+          </div>
+          ${checkboxesSinMarcar.length > 1 ? `
+            <div class="p-3">
+              <button class="btn btn-primary w-100" onclick="activarTodasLasSugerencias()">
+                Activar todas las mejoras
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+
+    sugerenciasAccordion.appendChild(mainAccordionItem);
+    
+    const innerAccordion = mainAccordionItem.querySelector('#sugerenciasInnerAccordion');
+    checkboxesSinMarcar.forEach((checkbox, index) => {
+      innerAccordion.appendChild(crearElementoMejora(checkbox, index, false));
+    });
+
+    sugerenciasDiv.appendChild(sugerenciasAccordion);
+  }
 }
 
 // Escucha el evento de cambio en todos los selects
@@ -203,3 +255,147 @@ checkboxes.forEach((checkbox) => {
 
 // Llama a la función al cargar la página para mostrar el resumen inicial
 actualizarPrecioTotalYResumen();
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Seleccionar todos los switches
+  const switches = document.querySelectorAll(".form-check-input");
+
+  // Iterar sobre cada switch y agregar un evento de cambio
+  switches.forEach((switchElement) => {
+    switchElement.addEventListener("change", (event) => {
+      const isChecked = event.target.checked; // Verificar si el switch está activado
+      const precio = parseInt(event.target.dataset.precio, 10); // Obtener el precio asociado
+      const label = event.target.nextElementSibling; // Obtener el label asociado
+
+      // Mostrar sugerencias o realizar acciones según el estado del switch
+      if (isChecked) {
+        label.textContent = `Activado (+$${precio})`; // Cambiar el texto del label
+        agregarSugerencia(event.target.id, precio); // Agregar sugerencia
+      } else {
+        label.textContent = "Activar"; // Restaurar el texto original
+        eliminarSugerencia(event.target.id); // Eliminar sugerencia
+      }
+    });
+  });
+
+  // Función para agregar sugerencias
+  function agregarSugerencia(id, precio) {
+    const listaSugerencias = document.getElementById("sugerencias");
+    let sugerencia = document.getElementById(`sugerencia-${id}`);
+
+    // Si la sugerencia ya existe, no la agregues de nuevo
+    if (!sugerencia) {
+      sugerencia = document.createElement("div");
+      sugerencia.className =
+        "list-group-item d-flex justify-content-between align-items-center";
+      sugerencia.id = `sugerencia-${id}`;
+      sugerencia.innerHTML = `
+            Mejora disponible: +$${precio}
+            <button class="btn btn-sm btn-primary activar-mejora" data-id="${id}">Activar</button>
+        `;
+      listaSugerencias.appendChild(sugerencia);
+
+      // Agregar evento al botón de activar
+      sugerencia
+        .querySelector(".activar-mejora")
+        .addEventListener("click", () => {
+          const switchElement = document.getElementById(id);
+          if (switchElement) {
+            switchElement.checked = true; // Activar el switch
+            switchElement.dispatchEvent(new Event("change")); // Disparar el evento de cambio
+          }
+        });
+    }
+  }
+
+  // Función para eliminar sugerencias
+  function eliminarSugerencia(id) {
+    const sugerencia = document.getElementById(`sugerencia-${id}`);
+    if (sugerencia) {
+      sugerencia.remove();
+    }
+  }
+
+  // Agregar canvas al DOM
+  const contenedorCanvas = document.createElement('div');
+  contenedorCanvas.className = 'mt-4';
+  contenedorCanvas.innerHTML = `
+    <h4>Vista previa de la ventana</h4>
+    <div class="border rounded p-3 bg-light">
+      <canvas id="ventanaCanvas" width="400" height="400" 
+              style="width: 100%; max-width: 400px;"></canvas>
+    </div>
+  `;
+  
+  // Insertar después del resumen
+  const resumen = document.getElementById('lista-resumen');
+  resumen.parentNode.insertBefore(contenedorCanvas, resumen.nextSibling);
+  
+  // Inicializar el canvas
+  const ventanaCanvas = new VentanaCanvas('ventanaCanvas');
+  
+  // Función para actualizar el dibujo
+  function actualizarDibujo() {
+    const anchoInput = document.getElementById('ancho');
+    const altoInput = document.getElementById('alto');
+    const tipoSelect = document.getElementById('tipo-ventana');
+    
+    const ancho = parseInt(anchoInput.value) || 1000;
+    const alto = parseInt(altoInput.value) || 1000;
+    const tipo = tipoSelect ? tipoSelect.value : 'practicable';
+    
+    ventanaCanvas.dibujar(ancho, alto, tipo);
+  }
+  
+  // Agregar listeners
+  const anchoInput = document.getElementById('ancho');
+  const altoInput = document.getElementById('alto');
+  const tipoSelect = document.getElementById('tipo-ventana');
+  
+  if (anchoInput && altoInput) {
+    anchoInput.addEventListener('input', actualizarDibujo);
+    altoInput.addEventListener('input', actualizarDibujo);
+  }
+  
+  if (tipoSelect) {
+    tipoSelect.addEventListener('change', actualizarDibujo);
+  }
+  
+  // Dibujo inicial
+  actualizarDibujo();
+});
+
+function activarTodasLasSugerencias() {
+  // Obtener todos los checkboxes que no están marcados
+  const checkboxesSinMarcar = document.querySelectorAll('input[type="checkbox"]:not(:checked)');
+  
+  // Activar cada checkbox
+  checkboxesSinMarcar.forEach(checkbox => {
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change')); // Disparar el evento change
+  });
+
+  // Actualizar el precio total y el resumen
+  actualizarPrecioTotalYResumen();
+}
+
+// Asegurarse de que los checkboxes tienen los event listeners correctos
+document.addEventListener('DOMContentLoaded', () => {
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', (event) => {
+      const label = event.target.nextElementSibling;
+      const precio = parseInt(event.target.dataset.precio, 10);
+      
+      if (event.target.checked) {
+        label.textContent = `Activado (+$${precio})`;
+      } else {
+        label.textContent = "Activar";
+      }
+      
+      actualizarPrecioTotalYResumen();
+    });
+  });
+
+});
