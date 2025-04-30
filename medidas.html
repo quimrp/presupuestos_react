@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurador de Ventanas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Formulario de medidas -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Dimensiones de la ventana</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formMedidas">
+                            <div class="mb-3">
+                                <label for="referencia" class="form-label">Referencia</label>
+                                <input type="text" class="form-control" id="referencia">
+                            </div>
+                            <div class="mb-3">
+                                <label for="ancho" class="form-label">Ancho (mm)</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="ancho" 
+                                       value="1000" 
+                                       min="300" 
+                                       max="3000"
+                                       step="10">
+                                <div class="form-text">Mínimo: 300mm, Máximo: 3000mm</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="alto" class="form-label">Alto (mm)</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="alto" 
+                                       value="1000" 
+                                       min="300" 
+                                       max="3000"
+                                       step="10">
+                                <div class="form-text">Mínimo: 300mm, Máximo: 3000mm</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="tipo-ventana" class="form-label">Tipo de ventana</label>
+                                <select class="form-select" id="tipo-ventana">
+                                    <option value="practicable">Practicable</option>
+                                    <option value="corredera">Corredera</option>
+                                    <option value="oscilobatiente">Oscilobatiente</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="mano-ventana" class="form-label">Mano</label>
+                                <select class="form-control" id="mano-ventana">
+                                    <option value="izquierda">Izquierda</option>
+                                    <option value="derecha">Derecha</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <button id="agregar-ventana" class="btn btn-primary" type="button">Agregar Ventana</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista previa del canvas -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Vista previa</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="ventanaCanvas" width="600" height="400" 
+                                class="border rounded w-100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor para la lista de ventanas -->
+        <div id="lista-ventanas" class="row mt-4">
+        </div>
+    </div>
+
+    <script src="assets/js/ventanaCanvas.js"></script>
+</body>
+</html> 
