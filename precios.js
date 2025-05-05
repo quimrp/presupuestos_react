@@ -145,42 +145,343 @@ const precioTotalElement = document.getElementById("precio-total");
 // Referencia al contenedor del resumen
 const listaResumen = document.getElementById("lista-resumen");
 
+// Precios base por tipo de ventana
+const PRECIOS_BASE = {
+    'practicable': 150,
+    'oscilobatiente': 200,
+    'corredera': 180
+};
+
+// Medidas estándar y sus descuentos
+const MEDIDAS_ESTANDAR = [
+    { ancho: 600, alto: 600, descuento: 10 },
+    { ancho: 800, alto: 800, descuento: 10 },
+    { ancho: 1000, alto: 1000, descuento: 15 },
+    { ancho: 1200, alto: 1200, descuento: 15 },
+    { ancho: 1500, alto: 1500, descuento: 20 }
+];
+
+function calcularPrecioVentana(ventana) {
+    const { ancho, alto, tipo } = ventana;
+    const area = (ancho * alto) / 1000000; // Convertir a metros cuadrados
+    let precio = PRECIOS_BASE[tipo] * area;
+
+    // Buscar si coincide con medidas estándar
+    const medidaEstandar = MEDIDAS_ESTANDAR.find(
+        medida => medida.ancho === ancho && medida.alto === alto
+    );
+
+    if (medidaEstandar) {
+        const descuento = precio * (medidaEstandar.descuento / 100);
+        precio -= descuento;
+    }
+
+    return precio;
+}
+
+function mostrarSugerencias() {
+    const anchoActual = parseInt(document.getElementById('ancho').value) || 0;
+    const altoActual = parseInt(document.getElementById('alto').value) || 0;
+    const contenedorSugerencias = document.getElementById('sugerencias');
+
+    if (!anchoActual || !altoActual) {
+        contenedorSugerencias.innerHTML = '';
+        return;
+    }
+
+    const sugerencias = MEDIDAS_ESTANDAR.filter(medida => {
+        const diferenciaAncho = Math.abs(medida.ancho - anchoActual);
+        const diferenciaAlto = Math.abs(medida.alto - altoActual);
+        return diferenciaAncho <= 200 && diferenciaAlto <= 200;
+    });
+
+    if (sugerencias.length === 0) {
+        contenedorSugerencias.innerHTML = '';
+        return;
+    }
+
+    let html = '<div class="alert alert-info">';
+    html += '<h6>Medidas estándar sugeridas:</h6>';
+    html += '<ul class="list-unstyled mb-0">';
+    
+    sugerencias.forEach(sugerencia => {
+        html += `
+            <li>
+                <button class="btn btn-link p-0" onclick="aplicarMedida(${sugerencia.ancho}, ${sugerencia.alto})">
+                    ${sugerencia.ancho} x ${sugerencia.alto} mm 
+                    (${sugerencia.descuento}% descuento)
+                </button>
+            </li>
+        `;
+    });
+    
+    html += '</ul></div>';
+    contenedorSugerencias.innerHTML = html;
+}
+
+function aplicarMedida(ancho, alto) {
+    const anchoInput = document.getElementById('ancho');
+    const altoInput = document.getElementById('alto');
+    
+    anchoInput.value = ancho;
+    altoInput.value = alto;
+    
+    // Crear y disparar eventos de input
+    const event = new Event('input', {
+        bubbles: true,
+        cancelable: true,
+    });
+    
+    anchoInput.dispatchEvent(event);
+    altoInput.dispatchEvent(event);
+    actualizarPrecio();
+}
+
+function actualizarPrecio() {
+    const ventana = {
+        ancho: parseInt(document.getElementById('ancho').value) || 0,
+        alto: parseInt(document.getElementById('alto').value) || 0,
+        tipo: document.getElementById('tipo-ventana').value
+    };
+
+    const precio = calcularPrecioVentana(ventana);
+    document.getElementById('precio').textContent = `${precio.toFixed(2)} €`;
+    mostrarSugerencias();
+}
+
+// Agregar esta función que falta
+function agregarSugerencia(id, precio) {
+    const listaSugerencias = document.getElementById("sugerencias");
+    
+    // Si es la primera sugerencia, crear el encabezado
+    if (!listaSugerencias.querySelector('.alert-info')) {
+        const encabezado = document.createElement("h5");
+        encabezado.className = "mb-3";
+        encabezado.textContent = "Mejoras disponibles";
+        encabezado.id = "titulo-mejoras";
+        listaSugerencias.appendChild(encabezado);
+    }
+    
+    const sugerenciaDiv = document.createElement("div");
+    sugerenciaDiv.className = "alert alert-info d-flex justify-content-between align-items-center";
+    sugerenciaDiv.setAttribute("data-id", id);
+    
+    const nombreMejora = document.querySelector(`label[for="${id}"]`).textContent;
+    
+    sugerenciaDiv.innerHTML = `
+        <div>
+            <strong>${nombreMejora}</strong>
+            <br>
+            <small>Precio adicional: ${precio}€</small>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('${id}').click()">
+            Activar
+        </button>
+    `;
+    
+    listaSugerencias.appendChild(sugerenciaDiv);
+}
+
+function mostrarSugerenciasIniciales() {
+    const listaSugerencias = document.getElementById("sugerencias");
+    listaSugerencias.innerHTML = ''; // Limpiar sugerencias existentes
+    
+    const switches = document.querySelectorAll(".form-check-input");
+    const switchesSinMarcar = Array.from(switches).filter(sw => !sw.checked);
+    
+    // Solo mostrar sugerencias si hay switches sin marcar
+    if (switchesSinMarcar.length > 0) {
+        switchesSinMarcar.forEach(switchElement => {
+            agregarSugerencia(switchElement.id, parseInt(switchElement.dataset.precio, 10));
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const switches = document.querySelectorAll(".form-check-input");
+    
+    // Inicializar los switches
+    switches.forEach((switchElement) => {
+        const label = switchElement.nextElementSibling;
+        label.textContent = "Activar"; // Establecer texto inicial
+    });
+
+    // Agregar los event listeners para los cambios
+    switches.forEach((switchElement) => {
+        switchElement.addEventListener("change", (event) => {
+            const isChecked = event.target.checked;
+            const precio = parseInt(event.target.dataset.precio, 10);
+            const label = event.target.nextElementSibling;
+
+            if (isChecked) {
+                label.textContent = `Activado (+$${precio})`;
+                const sugerencia = document.querySelector(`[data-id="${event.target.id}"]`);
+                if (sugerencia) {
+                    sugerencia.remove();
+                    // Verificar si quedan sugerencias
+                    const sugerenciasRestantes = document.querySelectorAll('.alert-info');
+                    if (sugerenciasRestantes.length === 0) {
+                        const titulo = document.getElementById('titulo-mejoras');
+                        if (titulo) titulo.remove();
+                    }
+                }
+            } else {
+                label.textContent = "Activar";
+                agregarSugerencia(event.target.id, precio);
+            }
+        });
+    });
+
+    // Inicializar el canvas
+    const ventanaCanvas = new VentanaCanvas();
+    
+    // Función para actualizar el dibujo
+    function actualizarDibujo() {
+        const anchoInput = document.getElementById('ancho');
+        const altoInput = document.getElementById('alto');
+        const tipoSelect = document.getElementById('tipo-ventana');
+        
+        const ancho = parseInt(anchoInput.value) || 1000;
+        const alto = parseInt(altoInput.value) || 1000;
+        const tipo = tipoSelect ? tipoSelect.value : 'practicable';
+        
+        ventanaCanvas.dibujar(ancho, alto, tipo);
+    }
+    
+    // Dibujo inicial
+    actualizarDibujo();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const switches = document.querySelectorAll(".form-check-input");
+
+    const anchoInput = document.getElementById('ancho');
+    const altoInput = document.getElementById('alto');
+    const tipoSelect = document.getElementById('tipo-ventana');
+
+    if (anchoInput && altoInput && tipoSelect) {
+        anchoInput.addEventListener('input', actualizarPrecio);
+        altoInput.addEventListener('input', actualizarPrecio);
+        tipoSelect.addEventListener('change', actualizarPrecio);
+        
+        // Inicialización
+        actualizarPrecio();
+    }
+
+    // Inicializar los switches
+    switches.forEach((switchElement) => {
+        const label = switchElement.nextElementSibling;
+        label.textContent = "Activar"; // Establecer texto inicial
+    });
+
+    // Solo una llamada a mostrarSugerenciasIniciales
+    mostrarSugerenciasIniciales();
+});
+
+// Función para mostrar sugerencias de mejoras
+/*function mostrarSugerencias() {
+    const sugerenciasDiv = document.getElementById("sugerencias");
+    sugerenciasDiv.innerHTML = "";
+    
+    const checkboxesSinMarcar = document.querySelectorAll('input[type="checkbox"]:not(:checked)');
+    if (checkboxesSinMarcar.length > 0) {
+        const sugerenciasAccordion = document.createElement("div");
+        sugerenciasAccordion.className = "accordion mt-4";
+        sugerenciasAccordion.id = "sugerenciasAccordion";
+
+        const mainAccordionItem = document.createElement("div");
+        mainAccordionItem.className = "accordion-item";
+
+        mainAccordionItem.innerHTML = `
+            <h2 class="accordion-header" id="headingSugerencias">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapseSugerencias" aria-expanded="true" 
+                        aria-controls="collapseSugerencias">
+                    Mejoras disponibles (${checkboxesSinMarcar.length})
+                </button>
+            </h2>
+            <div id="collapseSugerencias" class="accordion-collapse collapse show" 
+                 aria-labelledby="headingSugerencias">
+                <div class="accordion-body p-0">
+                    <div class="accordion" id="sugerenciasInnerAccordion">
+                    </div>
+                    ${checkboxesSinMarcar.length > 1 ? `
+                        <div class="p-3">
+                            <button class="btn btn-primary w-100" onclick="activarTodasLasSugerencias()">
+                                Activar todas las mejoras
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        sugerenciasAccordion.appendChild(mainAccordionItem);
+        
+        const innerAccordion = mainAccordionItem.querySelector('#sugerenciasInnerAccordion');
+        checkboxesSinMarcar.forEach((checkbox, index) => {
+            innerAccordion.appendChild(crearElementoMejora(checkbox, index, false));
+        });
+
+        sugerenciasDiv.appendChild(sugerenciasAccordion);
+    }
+}*/
+
 // Función para crear un elemento de mejora
 function crearElementoMejora(checkbox, itemCount = 0, isActivated = false) {
-  const precio = parseInt(checkbox.dataset.precio, 10);
-  const accordionItem = document.createElement("div");
-  accordionItem.className = "accordion-item";
+    const precio = parseInt(checkbox.dataset.precio, 10);
+    const accordionItem = document.createElement("div");
+    accordionItem.className = "accordion-item";
 
-  const itemId = `mejora-${checkbox.id}-${itemCount}`;
-  const headerId = `heading-${itemId}`;
-  const collapseId = `collapse-${itemId}`;
+    const itemId = `mejora-${checkbox.id}-${itemCount}`;
+    const headerId = `heading-${itemId}`;
+    const collapseId = `collapse-${itemId}`;
 
-  accordionItem.innerHTML = `
-    <h2 class="accordion-header" id="${headerId}">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-              data-bs-target="#${collapseId}" aria-expanded="false" 
-              aria-controls="${collapseId}">
-        <div class="d-flex justify-content-between align-items-center w-100">
-          <span>${checkbox.name}${isActivated ? ': Sí' : ''}</span>
-          <span class="badge bg-primary ms-2">+$${precio}</span>
+    accordionItem.innerHTML = `
+        <h2 class="accordion-header" id="${headerId}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#${collapseId}" aria-expanded="false" 
+                    aria-controls="${collapseId}">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <span>${checkbox.name}${isActivated ? ': Sí' : ''}</span>
+                    <span class="badge bg-primary ms-2">+$${precio}</span>
+                </div>
+            </button>
+        </h2>
+        <div id="${collapseId}" class="accordion-collapse collapse" 
+             aria-labelledby="${headerId}" data-bs-parent="#${isActivated ? 'resumenAccordion' : 'sugerenciasInnerAccordion'}">
+            <div class="accordion-body">
+                <p class="mb-3">${getDescripcionCheckbox(checkbox.name)}</p>
+                ${!isActivated ? `
+                    <button class="btn btn-outline-primary btn-sm" 
+                            onclick="document.getElementById('${checkbox.id}').click()">
+                        Activar esta mejora
+                    </button>
+                ` : ''}
+            </div>
         </div>
-      </button>
-    </h2>
-    <div id="${collapseId}" class="accordion-collapse collapse" 
-         aria-labelledby="${headerId}" data-bs-parent="#${isActivated ? 'resumenAccordion' : 'sugerenciasInnerAccordion'}">
-      <div class="accordion-body">
-        <p class="mb-3">${getDescripcionCheckbox(checkbox.name)}</p>
-        ${!isActivated ? `
-          <button class="btn btn-outline-primary btn-sm" 
-                  onclick="document.getElementById('${checkbox.id}').click()">
-            Activar esta mejora
-          </button>
-        ` : ''}
-      </div>
-    </div>
-  `;
+    `;
 
-  return accordionItem;
+    return accordionItem;
+}
+
+// Función para activar todas las sugerencias
+function activarTodasLasSugerencias() {
+    const checkboxesSinMarcar = document.querySelectorAll('input[type="checkbox"]:not(:checked)');
+    checkboxesSinMarcar.forEach(checkbox => {
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event('change'));
+    });
+}
+
+// Función auxiliar para obtener descripciones de checkboxes
+function getDescripcionCheckbox(nombre) {
+    const descripciones = {
+        "tratamiento-termico": "El tratamiento térmico mejora la eficiencia energética.",
+        "tratamiento-acustico": "El tratamiento acústico reduce significativamente el ruido exterior.",
+        "instalacion": "La instalación incluida garantiza un montaje profesional."
+    };
+    return descripciones[nombre] || "";
 }
 
 // Función para actualizar el precio total y el resumen
@@ -391,65 +692,6 @@ function getDescripcionSelect(tipo, valor) {
   return descripciones[tipo]?.[valor] || "";
 }
 
-// Función auxiliar para obtener descripciones de checkboxes
-function getDescripcionCheckbox(nombre) {
-  const descripciones = {
-    "tratamiento-termico": "El tratamiento térmico mejora la eficiencia energética.",
-    "tratamiento-acustico": "El tratamiento acústico reduce significativamente el ruido exterior.",
-    "instalacion": "La instalación incluida garantiza un montaje profesional."
-  };
-  return descripciones[nombre] || "";
-}
-
-// Función para mostrar sugerencias
-function mostrarSugerencias() {
-  const sugerenciasDiv = document.getElementById("sugerencias");
-  sugerenciasDiv.innerHTML = "";
-  
-  const checkboxesSinMarcar = document.querySelectorAll('input[type="checkbox"]:not(:checked)');
-  if (checkboxesSinMarcar.length > 0) {
-    const sugerenciasAccordion = document.createElement("div");
-    sugerenciasAccordion.className = "accordion mt-4";
-    sugerenciasAccordion.id = "sugerenciasAccordion";
-
-    const mainAccordionItem = document.createElement("div");
-    mainAccordionItem.className = "accordion-item";
-
-    mainAccordionItem.innerHTML = `
-      <h2 class="accordion-header" id="headingSugerencias">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" 
-                data-bs-target="#collapseSugerencias" aria-expanded="true" 
-                aria-controls="collapseSugerencias">
-          Mejoras disponibles (${checkboxesSinMarcar.length})
-        </button>
-      </h2>
-      <div id="collapseSugerencias" class="accordion-collapse collapse show" 
-           aria-labelledby="headingSugerencias">
-        <div class="accordion-body p-0">
-          <div class="accordion" id="sugerenciasInnerAccordion">
-          </div>
-          ${checkboxesSinMarcar.length > 1 ? `
-            <div class="p-3">
-              <button class="btn btn-primary w-100" onclick="activarTodasLasSugerencias()">
-                Activar todas las mejoras
-              </button>
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
-
-    sugerenciasAccordion.appendChild(mainAccordionItem);
-    
-    const innerAccordion = mainAccordionItem.querySelector('#sugerenciasInnerAccordion');
-    checkboxesSinMarcar.forEach((checkbox, index) => {
-      innerAccordion.appendChild(crearElementoMejora(checkbox, index, false));
-    });
-
-    sugerenciasDiv.appendChild(sugerenciasAccordion);
-  }
-}
-
 // Escucha el evento de cambio en todos los selects
 selects.forEach((select) => {
   select.addEventListener("change", actualizarPrecioTotalYResumen);
@@ -457,152 +699,20 @@ selects.forEach((select) => {
 
 // Escucha el evento de cambio en todos los checkboxes
 checkboxes.forEach((checkbox) => {
-  checkbox.addEventListener("change", actualizarPrecioTotalYResumen);
+  checkbox.addEventListener("change", (event) => {
+    const label = event.target.nextElementSibling;
+    const precio = parseInt(event.target.dataset.precio, 10);
+    
+    if (event.target.checked) {
+      label.textContent = `Activado (+$${precio})`;
+    } else {
+      label.textContent = "Activar";
+    }
+    
+    actualizarPrecioTotalYResumen();
+  });
 });
 
 // Llama a la función al cargar la página para mostrar el resumen inicial
 actualizarPrecioTotalYResumen();
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Seleccionar todos los switches
-  const switches = document.querySelectorAll(".form-check-input");
-
-  // Iterar sobre cada switch y agregar un evento de cambio
-  switches.forEach((switchElement) => {
-    switchElement.addEventListener("change", (event) => {
-      const isChecked = event.target.checked; // Verificar si el switch está activado
-      const precio = parseInt(event.target.dataset.precio, 10); // Obtener el precio asociado
-      const label = event.target.nextElementSibling; // Obtener el label asociado
-
-      // Mostrar sugerencias o realizar acciones según el estado del switch
-      if (isChecked) {
-        label.textContent = `Activado (+$${precio})`; // Cambiar el texto del label
-        agregarSugerencia(event.target.id, precio); // Agregar sugerencia
-      } else {
-        label.textContent = "Activar"; // Restaurar el texto original
-        eliminarSugerencia(event.target.id); // Eliminar sugerencia
-      }
-    });
-  });
-
-  // Función para agregar sugerencias
-  function agregarSugerencia(id, precio) {
-    const listaSugerencias = document.getElementById("sugerencias");
-    let sugerencia = document.getElementById(`sugerencia-${id}`);
-
-    // Si la sugerencia ya existe, no la agregues de nuevo
-    if (!sugerencia) {
-      sugerencia = document.createElement("div");
-      sugerencia.className =
-        "list-group-item d-flex justify-content-between align-items-center";
-      sugerencia.id = `sugerencia-${id}`;
-      sugerencia.innerHTML = `
-            Mejora disponible: +$${precio}
-            <button class="btn btn-sm btn-primary activar-mejora" data-id="${id}">Activar</button>
-        `;
-      listaSugerencias.appendChild(sugerencia);
-
-      // Agregar evento al botón de activar
-      sugerencia
-        .querySelector(".activar-mejora")
-        .addEventListener("click", () => {
-          const switchElement = document.getElementById(id);
-          if (switchElement) {
-            switchElement.checked = true; // Activar el switch
-            switchElement.dispatchEvent(new Event("change")); // Disparar el evento de cambio
-          }
-        });
-    }
-  }
-
-  // Función para eliminar sugerencias
-  function eliminarSugerencia(id) {
-    const sugerencia = document.getElementById(`sugerencia-${id}`);
-    if (sugerencia) {
-      sugerencia.remove();
-    }
-  }
-
-  // Agregar canvas al DOM
-  const contenedorCanvas = document.createElement('div');
-  contenedorCanvas.className = 'mt-4';
-  contenedorCanvas.innerHTML = `
-    <h4>Vista previa de la ventana</h4>
-    <div class="border rounded p-3 bg-light">
-      <canvas id="ventanaCanvas" width="400" height="400" 
-              style="width: 100%; max-width: 400px;"></canvas>
-    </div>
-  `;
-  
-  // Insertar después del resumen
-  const resumen = document.getElementById('lista-resumen');
-  resumen.parentNode.insertBefore(contenedorCanvas, resumen.nextSibling);
-  
-  // Inicializar el canvas
-  const ventanaCanvas = new VentanaCanvas();
-  
-  // Función para actualizar el dibujo
-  function actualizarDibujo() {
-    const anchoInput = document.getElementById('ancho');
-    const altoInput = document.getElementById('alto');
-    const tipoSelect = document.getElementById('tipo-ventana');
-    
-    const ancho = parseInt(anchoInput.value) || 1000;
-    const alto = parseInt(altoInput.value) || 1000;
-    const tipo = tipoSelect ? tipoSelect.value : 'practicable';
-    
-    ventanaCanvas.dibujar(ancho, alto, tipo);
-  }
-  
-  // Agregar listeners
-  const anchoInput = document.getElementById('ancho');
-  const altoInput = document.getElementById('alto');
-  const tipoSelect = document.getElementById('tipo-ventana');
-  
-  if (anchoInput && altoInput) {
-    anchoInput.addEventListener('input', actualizarDibujo);
-    altoInput.addEventListener('input', actualizarDibujo);
-  }
-  
-  if (tipoSelect) {
-    tipoSelect.addEventListener('change', actualizarDibujo);
-  }
-  
-  // Dibujo inicial
-  actualizarDibujo();
-});
-
-function activarTodasLasSugerencias() {
-  // Obtener todos los checkboxes que no están marcados
-  const checkboxesSinMarcar = document.querySelectorAll('input[type="checkbox"]:not(:checked)');
-  
-  // Activar cada checkbox
-  checkboxesSinMarcar.forEach(checkbox => {
-    checkbox.checked = true;
-    checkbox.dispatchEvent(new Event('change')); // Disparar el evento change
-  });
-
-  // Actualizar el precio total y el resumen
-  actualizarPrecioTotalYResumen();
-}
-
-// Asegurarse de que los checkboxes tienen los event listeners correctos
-document.addEventListener('DOMContentLoaded', () => {
-  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-  
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', (event) => {
-      const label = event.target.nextElementSibling;
-      const precio = parseInt(event.target.dataset.precio, 10);
-      
-      if (event.target.checked) {
-        label.textContent = `Activado (+$${precio})`;
-      } else {
-        label.textContent = "Activar";
-      }
-      
-      actualizarPrecioTotalYResumen();
-    });
-  });
-
-});
