@@ -181,7 +181,8 @@ const ventanasPrueba = [
         tipo: "practicable",
         mano: "derecha",
         unidades: 2,
-        precio: 180
+        precio: 180,
+        hojas: 1
     },
     {
         referencia: "V002",
@@ -190,7 +191,8 @@ const ventanasPrueba = [
         tipo: "oscilobatiente",
         mano: "izquierda",
         unidades: 1,
-        precio: 220
+        precio: 220,
+        hojas: 1
     },
     {
         referencia: "V003",
@@ -199,7 +201,8 @@ const ventanasPrueba = [
         tipo: "corredera",
         mano: "derecha",
         unidades: 3,
-        precio: 200
+        precio: 200,
+        hojas: 2
     }
 ];
 
@@ -232,6 +235,30 @@ const MEDIDAS_ESTANDAR = [
     { ancho: 1500, alto: 1500, descuento: 20 }
 ];
 
+// Configuración de extras
+const CONFIG = {
+    extras: {
+        'tratamiento-termico': {
+            nombre: 'Tratamiento Térmico',
+            descripcion: 'Mejora la eficiencia energética',
+            tipo: 'm2',
+            precio: 20  // 20€/m²
+        },
+        'tratamiento-acustico': {
+            nombre: 'Tratamiento Acústico',
+            descripcion: 'Reduce significativamente el ruido exterior',
+            tipo: 'm2',
+            precio: 25  // 25€/m²
+        },
+        'instalacion': {
+            nombre: 'Instalación',
+            descripcion: 'Servicio de instalación profesional',
+            tipo: 'unidad',
+            precio: 50  // 50€/unidad
+        }
+    }
+};
+
 function calcularPrecioVentana(ventana) {
     const { ancho, alto, tipo } = ventana;
     const area = (ancho * alto) / 1000000; // Convertir a metros cuadrados
@@ -246,6 +273,12 @@ function calcularPrecioVentana(ventana) {
         const descuento = precio * (medidaEstandar.descuento / 100);
         precio -= descuento;
     }
+
+    // Calcular precio por hojas (mínimo 0.5m² por hoja)
+    const m2PorHoja = area / ventana.hojas;
+    const m2AjustadoPorHoja = Math.max(0.5, m2PorHoja);
+    const m2TotalAjustado = m2AjustadoPorHoja * ventana.hojas;
+    precio = PRECIOS_BASE[tipo] * m2TotalAjustado;
 
     return precio;
 }
@@ -312,7 +345,8 @@ function actualizarPrecio() {
     const ventana = {
         ancho: parseInt(document.getElementById('ancho').value) || 0,
         alto: parseInt(document.getElementById('alto').value) || 0,
-        tipo: document.getElementById('tipo-ventana').value
+        tipo: document.getElementById('tipo-ventana').value,
+        hojas: parseInt(document.getElementById('hojas').value) || 1
     };
 
     const precio = calcularPrecioVentana(ventana);
@@ -371,34 +405,26 @@ function mostrarSugerenciasIniciales() {
 document.addEventListener("DOMContentLoaded", () => {
     const switches = document.querySelectorAll(".form-check-input");
     
-    // Inicializar los switches
+    // Inicializar los switches con los precios correctos de CONFIG
     switches.forEach((switchElement) => {
+        const tipoExtra = switchElement.id;
+        const extra = CONFIG.extras[tipoExtra];
+        
+        // Calcular el precio total para todas las unidades
+        const precioTotal = calcularPrecioExtra(tipoExtra);
+        
+        // Actualizar el data-precio según CONFIG
+        switchElement.dataset.precio = precioTotal;
+        
         const label = switchElement.nextElementSibling;
-        label.textContent = "Activar"; // Establecer texto inicial
-    });
+        label.textContent = `Activar (+${precioTotal.toFixed(2)}€)`;
 
-    // Agregar los event listeners para los cambios
-    switches.forEach((switchElement) => {
+        // Agregar event listener para actualizar el texto cuando cambie
         switchElement.addEventListener("change", (event) => {
-            const isChecked = event.target.checked;
-            const precio = parseInt(event.target.dataset.precio, 10);
-            const label = event.target.nextElementSibling;
-
-            if (isChecked) {
-                label.textContent = `Activado (+$${precio})`;
-                const sugerencia = document.querySelector(`[data-id="${event.target.id}"]`);
-                if (sugerencia) {
-                    sugerencia.remove();
-                    // Verificar si quedan sugerencias
-                    const sugerenciasRestantes = document.querySelectorAll('.alert-info');
-                    if (sugerenciasRestantes.length === 0) {
-                        const titulo = document.getElementById('titulo-mejoras');
-                        if (titulo) titulo.remove();
-                    }
-                }
+            if (event.target.checked) {
+                label.textContent = `Activado (+${precioTotal.toFixed(2)}€)`;
             } else {
                 label.textContent = "Activar";
-                agregarSugerencia(event.target.id, precio);
             }
         });
     });
@@ -460,7 +486,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Ventanas a mostrar:', ventanasPrueba);
     
     ventanasPrueba.forEach((ventana, index) => {
-        console.log(`Procesando ventana ${index}:`, ventana);
+        // Calcular y almacenar los metros cuadrados
+        ventana.metrosCuadrados = (ventana.ancho * ventana.alto / 1000000).toFixed(2); // Convertir mm² a m²
+        
         const col = document.createElement('div');
         col.className = 'col';
         
@@ -488,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="card-text small mb-1">${ventana.ancho}x${ventana.alto}</p>
             <p class="card-text small mb-1">${ventana.tipo}</p>
             <p class="card-text small mb-1">Unidades: ${ventana.unidades}</p>
+            <p class="card-text small mb-1">m²: ${ventana.metrosCuadrados} m²</p>
             <p class="card-text small mb-1">Precio/u: ${ventana.precio.toFixed(2)} €</p>
             <p class="card-text small mb-1 text-primary fw-bold">Total: ${precioTotal.toFixed(2)} €</p>
         `;
@@ -773,20 +802,86 @@ selects.forEach((select) => {
   select.addEventListener("change", actualizarPrecioTotalYResumen);
 });
 
-// Escucha el evento de cambio en todos los checkboxes
-checkboxes.forEach((checkbox) => {
-  checkbox.addEventListener("change", (event) => {
-    const label = event.target.nextElementSibling;
-    const precio = parseInt(event.target.dataset.precio, 10);
+// Función para calcular el precio de los extras
+function calcularPrecioExtra(tipoExtra) {
+    let precioTotal = 0;
     
-    if (event.target.checked) {
-      label.textContent = `Activado (+$${precio})`;
-    } else {
-      label.textContent = "Activar";
+    console.group(`Cálculo de extra: ${tipoExtra}`);
+    
+    ventanasPrueba.forEach(ventana => {
+        let precioExtraVentana = 0;
+        const extra = CONFIG.extras[tipoExtra];
+        
+        console.group(`Ventana ${ventana.referencia}`);
+        console.log('Dimensiones:', `${ventana.ancho}x${ventana.alto}`);
+        console.log('Hojas:', ventana.hojas);
+        console.log('Unidades:', ventana.unidades);
+        
+        if (extra.tipo === "m2") {
+            // Calcular m2 por hoja
+            const m2Total = (ventana.ancho * ventana.alto) / 1000000;
+            console.log('M² totales:', m2Total.toFixed(2));
+            
+            const m2PorHoja = m2Total / ventana.hojas;
+            console.log('M² por hoja:', m2PorHoja.toFixed(2));
+            
+            // Aplicar mínimo de 0.5m² por hoja
+            const m2AjustadoPorHoja = Math.max(0.5, m2PorHoja);
+            console.log('M² ajustados por hoja:', m2AjustadoPorHoja.toFixed(2));
+            
+            // Calcular precio total ajustado
+            const m2TotalAjustado = m2AjustadoPorHoja * ventana.hojas;
+            console.log('M² totales ajustados:', m2TotalAjustado.toFixed(2));
+            
+            precioExtraVentana = m2TotalAjustado * extra.precio * ventana.unidades;
+            console.log('Precio por unidad:', (precioExtraVentana/ventana.unidades).toFixed(2));
+            console.log('Precio total ventana:', precioExtraVentana.toFixed(2));
+        } else {
+            // Si es precio fijo por unidad
+            precioExtraVentana = extra.precio * ventana.unidades;
+            console.log('Precio fijo por unidad:', extra.precio);
+            console.log(`Cálculo: ${ventana.unidades} unidades × ${extra.precio}€`);
+            console.log('Precio total ventana:', precioExtraVentana.toFixed(2));
+        }
+        
+        precioTotal += precioExtraVentana;
+        console.groupEnd();
+    });
+    
+    if (tipoExtra === 'instalacion') {
+        console.log('----------------------------------------');
+        console.log('Resumen de instalación:');
+        ventanasPrueba.forEach(ventana => {
+            console.log(`${ventana.referencia}: ${ventana.unidades} unidades × 50€ = ${ventana.unidades * 50}€`);
+        });
+        console.log('----------------------------------------');
     }
     
-    actualizarPrecioTotalYResumen();
-  });
+    console.log('Precio total del extra:', precioTotal.toFixed(2));
+    console.groupEnd();
+    
+    return precioTotal;
+}
+
+// Asegurarnos de que el evento change está correctamente configurado
+checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", (event) => {
+        console.log('Checkbox cambiado:', event.target.id);
+        const isChecked = event.target.checked;
+        const tipoExtra = event.target.id;
+        const precioExtra = calcularPrecioExtra(tipoExtra);
+        const label = event.target.nextElementSibling;
+        
+        console.log('Resultado del cálculo:', precioExtra);
+        
+        if (isChecked) {
+            label.textContent = `Activado (+${precioExtra.toFixed(2)} €)`;
+        } else {
+            label.textContent = "Activar";
+        }
+        
+        actualizarPrecioTotalYResumen();
+    });
 });
 
 // Llama a la función al cargar la página para mostrar el resumen inicial
@@ -839,6 +934,7 @@ function actualizarListaVentanas() {
         miniatura.style.objectFit = 'contain';
         
         const precioTotal = ventana.precio * ventana.unidades;
+        const metrosCuadrados = (ventana.ancho * ventana.alto / 1000000).toFixed(2); // Convertir mm² a m²
         
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body p-2';
@@ -847,6 +943,7 @@ function actualizarListaVentanas() {
             <p class="card-text small mb-1">${ventana.ancho}x${ventana.alto}</p>
             <p class="card-text small mb-1">${ventana.tipo}</p>
             <p class="card-text small mb-1">Unidades: ${ventana.unidades}</p>
+            <p class="card-text small mb-1">m²: ${metrosCuadrados} m²</p>
             <p class="card-text small mb-1">Precio/u: ${ventana.precio.toFixed(2)} €</p>
             <p class="card-text small mb-1 text-primary fw-bold">Total: ${precioTotal.toFixed(2)} €</p>
         `;
