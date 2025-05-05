@@ -6,7 +6,7 @@ class VentanaCanvas {
         this.canvas.width = 200;
         this.canvas.height = 150;
         this.ctx = this.canvas.getContext('2d');
-        this.color = '#000';
+        this.color = '#666';
     }
 
     crearMiniatura(ancho, alto, tipo, mano, referencia) {
@@ -27,18 +27,13 @@ class VentanaCanvas {
         const y = (canvas.height - alto * escala) / 2;
         
         // Dibujar marco
-        ctx.beginPath();
-        ctx.rect(x, y, ancho * escala, alto * escala);
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        this.dibujarMarco(ctx, x, y, ancho * escala, alto * escala);
         
         // Dibujar según el tipo
         if (tipo === 'corredera') {
             this.dibujarCorredera(ctx, x, y, ancho * escala, alto * escala);
         } else if (tipo === 'oscilobatiente') {
-            this.dibujarPracticable(ctx, x, y, ancho * escala, alto * escala, mano);
-            this.dibujarSimboloOscilobatiente(ctx, x, y, ancho * escala, alto * escala, mano);
+            this.dibujarOscilobatiente(ctx, x, y, ancho * escala, alto * escala, mano);
         } else {
             this.dibujarPracticable(ctx, x, y, ancho * escala, alto * escala, mano);
         }
@@ -46,60 +41,130 @@ class VentanaCanvas {
         return canvas;
     }
 
+    dibujarMarco(ctx, x, y, ancho, alto) {
+        // Marco exterior
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(x, y, ancho, alto);
+        
+        // Marco interior
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 10, y + 10, ancho - 20, alto - 20);
+    }
+
     dibujarPracticable(ctx, x, y, ancho, alto, mano) {
-        const xBisagra = mano === 'derecha' ? x + ancho - 10 : x + 10;
+        // Dibujar bisagras según la mano
+        const xBisagra = mano === 'derecha' ? x + 15 : x + ancho - 15;
+        
         ctx.beginPath();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
         ctx.moveTo(xBisagra, y + alto * 0.2);
         ctx.lineTo(xBisagra, y + alto * 0.3);
         ctx.moveTo(xBisagra, y + alto * 0.7);
         ctx.lineTo(xBisagra, y + alto * 0.8);
         ctx.stroke();
+        
+        // Dibujar símbolo de apertura
+        ctx.beginPath();
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        
+        if (mano === 'derecha') {
+            ctx.moveTo(x + 15, y + 15);
+            ctx.lineTo(x + ancho - 15, y + alto/2);
+            ctx.moveTo(x + 15, y + alto - 15);
+            ctx.lineTo(x + ancho - 15, y + alto/2);
+        } else {
+            ctx.moveTo(x + ancho - 15, y + 15);
+            ctx.lineTo(x + 15, y + alto/2);
+            ctx.moveTo(x + ancho - 15, y + alto - 15);
+            ctx.lineTo(x + 15, y + alto/2);
+        }
+        ctx.stroke();
     }
 
     dibujarCorredera(ctx, x, y, ancho, alto) {
+        // Dibujar división central
         ctx.beginPath();
         ctx.moveTo(x + ancho/2, y);
         ctx.lineTo(x + ancho/2, y + alto);
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 4;
         ctx.stroke();
-
-        // Añadir flechas indicadoras de movimiento
-        const flechaSize = 5;
-        // Flecha superior
-        ctx.beginPath();
-        ctx.moveTo(x + ancho/2 - 10, y + alto/2);
-        ctx.lineTo(x + ancho/2 - 5, y + alto/2 - flechaSize);
-        ctx.lineTo(x + ancho/2 - 5, y + alto/2 + flechaSize);
-        ctx.closePath();
-        ctx.fill();
-        // Flecha inferior
-        ctx.beginPath();
-        ctx.moveTo(x + ancho/2 + 10, y + alto/2);
-        ctx.lineTo(x + ancho/2 + 5, y + alto/2 - flechaSize);
-        ctx.lineTo(x + ancho/2 + 5, y + alto/2 + flechaSize);
-        ctx.closePath();
-        ctx.fill();
+        
+        // Dibujar flechas de dirección
+        this.dibujarFlechas(ctx, x, y, ancho, alto);
     }
 
-    dibujarSimboloOscilobatiente(ctx, x, y, ancho, alto, mano) {
-        const xCentro = mano === 'derecha' ? x + ancho - 20 : x + 20;
-        const yCentro = y + alto / 2;
+    dibujarFlechas(ctx, x, y, ancho, alto) {
+        const flecha = 20;
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 2;
         
-        // Línea vertical central
+        // Flecha izquierda
         ctx.beginPath();
-        ctx.moveTo(xCentro, yCentro - 10);
-        ctx.lineTo(xCentro, yCentro + 10);
+        ctx.moveTo(x + ancho/4 + flecha, y + alto/2);
+        ctx.lineTo(x + ancho/4 - flecha, y + alto/2);
+        ctx.lineTo(x + ancho/4 - flecha/2, y + alto/2 - flecha/2);
+        ctx.moveTo(x + ancho/4 - flecha, y + alto/2);
+        ctx.lineTo(x + ancho/4 - flecha/2, y + alto/2 + flecha/2);
         ctx.stroke();
-
-        // Flecha superior (abatible)
+        
+        // Flecha derecha
         ctx.beginPath();
-        ctx.moveTo(xCentro, yCentro - 10);
-        ctx.lineTo(xCentro + (mano === 'derecha' ? -5 : 5), yCentro - 5);
+        ctx.moveTo(x + 3*ancho/4 - flecha, y + alto/2);
+        ctx.lineTo(x + 3*ancho/4 + flecha, y + alto/2);
+        ctx.lineTo(x + 3*ancho/4 + flecha/2, y + alto/2 - flecha/2);
+        ctx.moveTo(x + 3*ancho/4 + flecha, y + alto/2);
+        ctx.lineTo(x + 3*ancho/4 + flecha/2, y + alto/2 + flecha/2);
         ctx.stroke();
+    }
 
-        // Flecha central (practicable)
+    dibujarOscilobatiente(ctx, x, y, ancho, alto, mano) {
+        // Dibujar bisagras
+        const xBisagra = mano === 'derecha' ? x + 15 : x + ancho - 15;
+        
         ctx.beginPath();
-        ctx.moveTo(xCentro, yCentro);
-        ctx.lineTo(xCentro + (mano === 'derecha' ? -5 : 5), yCentro);
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
+        ctx.moveTo(xBisagra, y + alto * 0.2);
+        ctx.lineTo(xBisagra, y + alto * 0.3);
+        ctx.moveTo(xBisagra, y + alto * 0.7);
+        ctx.lineTo(xBisagra, y + alto * 0.8);
+        ctx.stroke();
+        
+        // Dibujar símbolos de apertura
+        ctx.beginPath();
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        
+        if (mano === 'derecha') {
+            // Símbolo practicable
+            ctx.moveTo(x + 15, y + 15);
+            ctx.lineTo(x + ancho - 15, y + alto/2);
+            ctx.moveTo(x + 15, y + alto - 15);
+            ctx.lineTo(x + ancho - 15, y + alto/2);
+            
+            // Símbolo abatible
+            ctx.moveTo(x + 15, y + alto - 15);
+            ctx.lineTo(x + ancho/2, y + 15);
+            ctx.moveTo(x + ancho - 15, y + alto - 15);
+            ctx.lineTo(x + ancho/2, y + 15);
+        } else {
+            // Símbolo practicable
+            ctx.moveTo(x + ancho - 15, y + 15);
+            ctx.lineTo(x + 15, y + alto/2);
+            ctx.moveTo(x + ancho - 15, y + alto - 15);
+            ctx.lineTo(x + 15, y + alto/2);
+            
+            // Símbolo abatible
+            ctx.moveTo(x + 15, y + alto - 15);
+            ctx.lineTo(x + ancho/2, y + 15);
+            ctx.moveTo(x + ancho - 15, y + alto - 15);
+            ctx.lineTo(x + ancho/2, y + 15);
+        }
         ctx.stroke();
     }
 }
@@ -114,21 +179,27 @@ const ventanasPrueba = [
         ancho: 1000,
         alto: 1200,
         tipo: "practicable",
-        mano: "derecha"
+        mano: "derecha",
+        unidades: 2,
+        precio: 180
     },
     {
         referencia: "V002",
         ancho: 800,
         alto: 1000,
         tipo: "oscilobatiente",
-        mano: "izquierda"
+        mano: "izquierda",
+        unidades: 1,
+        precio: 220
     },
     {
         referencia: "V003",
         ancho: 1500,
         alto: 1000,
         tipo: "corredera",
-        mano: "derecha"
+        mano: "derecha",
+        unidades: 3,
+        precio: 200
     }
 ];
 
@@ -376,6 +447,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Solo una llamada a mostrarSugerenciasIniciales
     mostrarSugerenciasIniciales();
+
+    // Mostrar las ventanas de prueba
+    const ventanasGrid = document.getElementById('ventanas-grid');
+    console.log('Contenedor de ventanas:', ventanasGrid);
+    
+    if (!ventanasGrid) {
+        console.error('No se encontró el contenedor de ventanas');
+        return;
+    }
+
+    console.log('Ventanas a mostrar:', ventanasPrueba);
+    
+    ventanasPrueba.forEach((ventana, index) => {
+        console.log(`Procesando ventana ${index}:`, ventana);
+        const col = document.createElement('div');
+        col.className = 'col';
+        
+        const card = document.createElement('div');
+        card.className = 'card h-100';
+        card.style.maxWidth = '150px';
+        
+        const miniatura = ventanaCanvas.crearMiniatura(
+            ventana.ancho,
+            ventana.alto,
+            ventana.tipo,
+            ventana.mano,
+            ventana.referencia
+        );
+        miniatura.className = 'card-img-top';
+        miniatura.style.height = '100px';
+        miniatura.style.objectFit = 'contain';
+        
+        const precioTotal = ventana.precio * ventana.unidades;
+        
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body p-2';
+        cardBody.innerHTML = `
+            <p class="card-text small mb-1">Ref: ${ventana.referencia}</p>
+            <p class="card-text small mb-1">${ventana.ancho}x${ventana.alto}</p>
+            <p class="card-text small mb-1">${ventana.tipo}</p>
+            <p class="card-text small mb-1">Unidades: ${ventana.unidades}</p>
+            <p class="card-text small mb-1">Precio/u: ${ventana.precio.toFixed(2)} €</p>
+            <p class="card-text small mb-1 text-primary fw-bold">Total: ${precioTotal.toFixed(2)} €</p>
+        `;
+        
+        card.appendChild(miniatura);
+        card.appendChild(cardBody);
+        col.appendChild(card);
+        ventanasGrid.appendChild(col);
+    });
 });
 
 // Función para mostrar sugerencias de mejoras
@@ -621,51 +742,6 @@ function actualizarPrecioTotalYResumen() {
     accordion.appendChild(ventanasAccordionItem);
     listaResumen.appendChild(accordion);
 
-    // Mostrar las ventanas de prueba
-    const ventanasGrid = document.getElementById('ventanas-grid');
-    console.log('Contenedor de ventanas:', ventanasGrid);
-    
-    if (!ventanasGrid) {
-        console.error('No se encontró el contenedor de ventanas');
-        return;
-    }
-
-    console.log('Ventanas a mostrar:', ventanasPrueba);
-    
-    ventanasPrueba.forEach((ventana, index) => {
-        console.log(`Procesando ventana ${index}:`, ventana);
-        const col = document.createElement('div');
-        col.className = 'col';
-        
-        const card = document.createElement('div');
-        card.className = 'card h-100';
-        card.style.maxWidth = '150px';
-        
-        const miniatura = ventanaCanvas.crearMiniatura(
-            ventana.ancho,
-            ventana.alto,
-            ventana.tipo,
-            ventana.mano,
-            ventana.referencia
-        );
-        miniatura.className = 'card-img-top';
-        miniatura.style.height = '100px';
-        miniatura.style.objectFit = 'contain';
-        
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body p-2';
-        cardBody.innerHTML = `
-            <p class="card-text small mb-1">Ref: ${ventana.referencia}</p>
-            <p class="card-text small mb-1">${ventana.ancho}x${ventana.alto}</p>
-            <p class="card-text small mb-1">${ventana.tipo}</p>
-        `;
-        
-        card.appendChild(miniatura);
-        card.appendChild(cardBody);
-        col.appendChild(card);
-        ventanasGrid.appendChild(col);
-    });
-
     // Actualizar precio total
     precioTotalElement.textContent = `Precio Total: $${precioTotal}`;
 }
@@ -715,4 +791,89 @@ checkboxes.forEach((checkbox) => {
 
 // Llama a la función al cargar la página para mostrar el resumen inicial
 actualizarPrecioTotalYResumen();
+
+function agregarVentana() {
+    const referencia = referenciaInput.value.trim();
+    const unidades = parseInt(document.getElementById('unidades').value) || 1;
+    
+    if (!referencia) {
+        alert('Por favor, ingrese una referencia');
+        return;
+    }
+    
+    const ventana = {
+        referencia: referencia,
+        ancho: parseInt(anchoInput.value),
+        alto: parseInt(altoInput.value),
+        tipo: tipoSelect.value,
+        mano: manoSelect.value,
+        unidades: unidades
+    };
+    
+    ventanas.push(ventana);
+    actualizarListaVentanas();
+    referenciaInput.value = ''; // Limpiar el campo de referencia
+    document.getElementById('unidades').value = '1'; // Resetear unidades a 1
+}
+
+function actualizarListaVentanas() {
+    listaVentanas.innerHTML = '';
+    
+    ventanasPrueba.forEach((ventana, index) => {
+        const col = document.createElement('div');
+        col.className = 'col';
+        
+        const card = document.createElement('div');
+        card.className = 'card h-100';
+        card.style.maxWidth = '150px';
+        
+        const miniatura = ventanaCanvas.crearMiniatura(
+            ventana.ancho,
+            ventana.alto,
+            ventana.tipo,
+            ventana.mano,
+            ventana.referencia
+        );
+        miniatura.className = 'card-img-top';
+        miniatura.style.height = '100px';
+        miniatura.style.objectFit = 'contain';
+        
+        const precioTotal = ventana.precio * ventana.unidades;
+        
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body p-2';
+        cardBody.innerHTML = `
+            <p class="card-text small mb-1">Ref: ${ventana.referencia}</p>
+            <p class="card-text small mb-1">${ventana.ancho}x${ventana.alto}</p>
+            <p class="card-text small mb-1">${ventana.tipo}</p>
+            <p class="card-text small mb-1">Unidades: ${ventana.unidades}</p>
+            <p class="card-text small mb-1">Precio/u: ${ventana.precio.toFixed(2)} €</p>
+            <p class="card-text small mb-1 text-primary fw-bold">Total: ${precioTotal.toFixed(2)} €</p>
+        `;
+        
+        card.appendChild(miniatura);
+        card.appendChild(cardBody);
+        col.appendChild(card);
+        listaVentanas.appendChild(col);
+    });
+}
+
+// Función para editar unidades
+function editarUnidades(index) {
+    const ventana = ventanas[index];
+    const nuevasUnidades = prompt(`Ingrese el número de unidades para la referencia ${ventana.referencia}:`, ventana.unidades);
+    
+    if (nuevasUnidades !== null) {
+        const cantidad = parseInt(nuevasUnidades);
+        if (!isNaN(cantidad) && cantidad > 0) {
+            ventanas[index].unidades = cantidad;
+            actualizarListaVentanas();
+        } else {
+            alert('Por favor, ingrese un número válido mayor que 0');
+        }
+    }
+}
+
+// Asegúrate de que la función esté disponible globalmente
+window.editarUnidades = editarUnidades;
 
