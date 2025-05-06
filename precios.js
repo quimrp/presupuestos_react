@@ -1,173 +1,4 @@
-// Clase para manejar el dibujo de ventanas
-class VentanaCanvas {
-    constructor() {
-        // Crear un nuevo canvas cada vez
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = 200;
-        this.canvas.height = 150;
-        this.ctx = this.canvas.getContext('2d');
-        this.color = '#666';
-    }
-
-    crearMiniatura(ancho, alto, tipo, mano, referencia) {
-        // Crear un nuevo canvas para cada miniatura
-        const canvas = document.createElement('canvas');
-        canvas.width = 200;
-        canvas.height = 150;
-        const ctx = canvas.getContext('2d');
-        
-        // Calcular escala para ajustar al tamaño de la miniatura
-        const escala = Math.min(
-            (canvas.width - 40) / ancho,
-            (canvas.height - 40) / alto
-        ) * 0.8;
-        
-        // Centrar el dibujo
-        const x = (canvas.width - ancho * escala) / 2;
-        const y = (canvas.height - alto * escala) / 2;
-        
-        // Dibujar marco
-        this.dibujarMarco(ctx, x, y, ancho * escala, alto * escala);
-        
-        // Dibujar según el tipo
-        if (tipo === 'corredera') {
-            this.dibujarCorredera(ctx, x, y, ancho * escala, alto * escala);
-        } else if (tipo === 'oscilobatiente') {
-            this.dibujarOscilobatiente(ctx, x, y, ancho * escala, alto * escala, mano);
-        } else {
-            this.dibujarPracticable(ctx, x, y, ancho * escala, alto * escala, mano);
-        }
-        
-        return canvas;
-    }
-
-    dibujarMarco(ctx, x, y, ancho, alto) {
-        // Marco exterior
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 4;
-        ctx.strokeRect(x, y, ancho, alto);
-        
-        // Marco interior
-        ctx.strokeStyle = '#999';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x + 10, y + 10, ancho - 20, alto - 20);
-    }
-
-    dibujarPracticable(ctx, x, y, ancho, alto, mano) {
-        // Dibujar bisagras según la mano
-        const xBisagra = mano === 'derecha' ? x + 15 : x + ancho - 15;
-        
-        ctx.beginPath();
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.moveTo(xBisagra, y + alto * 0.2);
-        ctx.lineTo(xBisagra, y + alto * 0.3);
-        ctx.moveTo(xBisagra, y + alto * 0.7);
-        ctx.lineTo(xBisagra, y + alto * 0.8);
-        ctx.stroke();
-        
-        // Dibujar símbolo de apertura
-        ctx.beginPath();
-        ctx.strokeStyle = '#999';
-        ctx.lineWidth = 1;
-        
-        if (mano === 'derecha') {
-            ctx.moveTo(x + 15, y + 15);
-            ctx.lineTo(x + ancho - 15, y + alto/2);
-            ctx.moveTo(x + 15, y + alto - 15);
-            ctx.lineTo(x + ancho - 15, y + alto/2);
-        } else {
-            ctx.moveTo(x + ancho - 15, y + 15);
-            ctx.lineTo(x + 15, y + alto/2);
-            ctx.moveTo(x + ancho - 15, y + alto - 15);
-            ctx.lineTo(x + 15, y + alto/2);
-        }
-        ctx.stroke();
-    }
-
-    dibujarCorredera(ctx, x, y, ancho, alto) {
-        // Dibujar división central
-        ctx.beginPath();
-        ctx.moveTo(x + ancho/2, y);
-        ctx.lineTo(x + ancho/2, y + alto);
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        
-        // Dibujar flechas de dirección
-        this.dibujarFlechas(ctx, x, y, ancho, alto);
-    }
-
-    dibujarFlechas(ctx, x, y, ancho, alto) {
-        const flecha = 20;
-        ctx.strokeStyle = '#999';
-        ctx.lineWidth = 2;
-        
-        // Flecha izquierda
-        ctx.beginPath();
-        ctx.moveTo(x + ancho/4 + flecha, y + alto/2);
-        ctx.lineTo(x + ancho/4 - flecha, y + alto/2);
-        ctx.lineTo(x + ancho/4 - flecha/2, y + alto/2 - flecha/2);
-        ctx.moveTo(x + ancho/4 - flecha, y + alto/2);
-        ctx.lineTo(x + ancho/4 - flecha/2, y + alto/2 + flecha/2);
-        ctx.stroke();
-        
-        // Flecha derecha
-        ctx.beginPath();
-        ctx.moveTo(x + 3*ancho/4 - flecha, y + alto/2);
-        ctx.lineTo(x + 3*ancho/4 + flecha, y + alto/2);
-        ctx.lineTo(x + 3*ancho/4 + flecha/2, y + alto/2 - flecha/2);
-        ctx.moveTo(x + 3*ancho/4 + flecha, y + alto/2);
-        ctx.lineTo(x + 3*ancho/4 + flecha/2, y + alto/2 + flecha/2);
-        ctx.stroke();
-    }
-
-    dibujarOscilobatiente(ctx, x, y, ancho, alto, mano) {
-        // Dibujar bisagras
-        const xBisagra = mano === 'derecha' ? x + 15 : x + ancho - 15;
-        
-        ctx.beginPath();
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.moveTo(xBisagra, y + alto * 0.2);
-        ctx.lineTo(xBisagra, y + alto * 0.3);
-        ctx.moveTo(xBisagra, y + alto * 0.7);
-        ctx.lineTo(xBisagra, y + alto * 0.8);
-        ctx.stroke();
-        
-        // Dibujar símbolos de apertura
-        ctx.beginPath();
-        ctx.strokeStyle = '#999';
-        ctx.lineWidth = 1;
-        
-        if (mano === 'derecha') {
-            // Símbolo practicable
-            ctx.moveTo(x + 15, y + 15);
-            ctx.lineTo(x + ancho - 15, y + alto/2);
-            ctx.moveTo(x + 15, y + alto - 15);
-            ctx.lineTo(x + ancho - 15, y + alto/2);
-            
-            // Símbolo abatible
-            ctx.moveTo(x + 15, y + alto - 15);
-            ctx.lineTo(x + ancho/2, y + 15);
-            ctx.moveTo(x + ancho - 15, y + alto - 15);
-            ctx.lineTo(x + ancho/2, y + 15);
-        } else {
-            // Símbolo practicable
-            ctx.moveTo(x + ancho - 15, y + 15);
-            ctx.lineTo(x + 15, y + alto/2);
-            ctx.moveTo(x + ancho - 15, y + alto - 15);
-            ctx.lineTo(x + 15, y + alto/2);
-            
-            // Símbolo abatible
-            ctx.moveTo(x + 15, y + alto - 15);
-            ctx.lineTo(x + ancho/2, y + 15);
-            ctx.moveTo(x + ancho - 15, y + alto - 15);
-            ctx.lineTo(x + ancho/2, y + 15);
-        }
-        ctx.stroke();
-    }
-}
+import VentanaCanvas from './src/ventanaCanvas2.js';
 
 // Crear instancia de VentanaCanvas
 const ventanaCanvas = new VentanaCanvas();
@@ -411,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const extra = CONFIG.extras[tipoExtra];
         
         // Calcular el precio total para todas las unidades
-        const precioTotal = calcularPrecioExtra(tipoExtra);
+        const precioTotal = calcularPrecioExtra(tipoExtra, ventanasPrueba, CONFIG);
         
         // Actualizar el data-precio según CONFIG
         switchElement.dataset.precio = precioTotal;
@@ -434,14 +265,28 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Función para actualizar el dibujo
     function actualizarDibujo() {
+        // Solo intentamos dibujar si estamos en la página del configurador
+        const configuradorForm = document.getElementById('configurador-form');
+        if (!configuradorForm) {
+            console.log('No estamos en la página del configurador');
+            return;
+        }
+
         const anchoInput = document.getElementById('ancho');
         const altoInput = document.getElementById('alto');
         const tipoSelect = document.getElementById('tipo-ventana');
         
+        // Si no encontramos los elementos necesarios, no hacemos nada
+        if (!anchoInput || !altoInput || !tipoSelect) {
+            console.log('No se encontraron todos los elementos necesarios para el dibujo');
+            return;
+        }
+        
         const ancho = parseInt(anchoInput.value) || 1000;
         const alto = parseInt(altoInput.value) || 1000;
-        const tipo = tipoSelect ? tipoSelect.value : 'practicable';
+        const tipo = tipoSelect.value || 'practicable';
         
+        console.log('Actualizando dibujo:', { ancho, alto, tipo });
         ventanaCanvas.dibujar(ancho, alto, tipo);
     }
     
@@ -639,6 +484,15 @@ function actualizarPrecioTotalYResumen() {
     console.log('Iniciando actualización...');
     
     let precioTotal = precioBase;
+    let precioExtras = 0;
+    
+    // Guardar el estado del acordeón de ventanas
+    const ventanasGrid = document.getElementById('ventanas-grid');
+    const ventanasGridHTML = ventanasGrid ? ventanasGrid.innerHTML : '';
+    const ventanasAccordionButton = document.querySelector('[data-bs-target="#collapse-ventanas"]');
+    const isVentanasExpanded = ventanasAccordionButton ? ventanasAccordionButton.getAttribute('aria-expanded') === 'true' : false;
+    
+    // Limpiamos el contenido
     listaResumen.innerHTML = "";
     
     const accordion = document.createElement("div");
@@ -749,20 +603,21 @@ function actualizarPrecioTotalYResumen() {
     ventanasAccordionItem.className = "accordion-item";
     ventanasAccordionItem.innerHTML = `
         <h2 class="accordion-header" id="heading-ventanas">
-            <button class="accordion-button collapsed" type="button" 
+            <button class="accordion-button ${isVentanasExpanded ? '' : 'collapsed'}" type="button" 
                     data-bs-toggle="collapse" 
                     data-bs-target="#collapse-ventanas" 
-                    aria-expanded="false" 
+                    aria-expanded="${isVentanasExpanded}" 
                     aria-controls="collapse-ventanas">
                 Ventanas de Referencia
             </button>
         </h2>
         <div id="collapse-ventanas" 
-             class="accordion-collapse collapse" 
+             class="accordion-collapse collapse ${isVentanasExpanded ? 'show' : ''}" 
              aria-labelledby="heading-ventanas" 
              data-bs-parent="#resumenAccordion">
             <div class="accordion-body">
                 <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="ventanas-grid">
+                    ${ventanasGridHTML}
                 </div>
             </div>
         </div>
@@ -799,68 +654,28 @@ function getDescripcionSelect(tipo, valor) {
 
 // Escucha el evento de cambio en todos los selects
 selects.forEach((select) => {
-  select.addEventListener("change", actualizarPrecioTotalYResumen);
+  select.addEventListener("change", () => actualizarPrecioTotalYResumen(selects, checkboxes, CONFIG));
 });
 
 // Función para calcular el precio de los extras
-function calcularPrecioExtra(tipoExtra) {
-    let precioTotal = 0;
+function calcularPrecioExtra(tipoExtra, ventanas, CONFIG) {
+    const extra = CONFIG.extras[tipoExtra];
     
-    console.group(`Cálculo de extra: ${tipoExtra}`);
-    
-    ventanasPrueba.forEach(ventana => {
-        let precioExtraVentana = 0;
-        const extra = CONFIG.extras[tipoExtra];
-        
-        console.group(`Ventana ${ventana.referencia}`);
-        console.log('Dimensiones:', `${ventana.ancho}x${ventana.alto}`);
-        console.log('Hojas:', ventana.hojas);
-        console.log('Unidades:', ventana.unidades);
-        
-        if (extra.tipo === "m2") {
-            // Calcular m2 por hoja
-            const m2Total = (ventana.ancho * ventana.alto) / 1000000;
-            console.log('M² totales:', m2Total.toFixed(2));
+    return ventanas.reduce((total, ventana) => {
+        const m2Total = (ventana.ancho * ventana.alto) / 1000000;
+        const precioVentana = extra.tipo === "m2" 
+            ? calcularPrecioExtraPorM2(ventana, m2Total, extra.precio)
+            : extra.precio * ventana.unidades;
             
-            const m2PorHoja = m2Total / ventana.hojas;
-            console.log('M² por hoja:', m2PorHoja.toFixed(2));
-            
-            // Aplicar mínimo de 0.5m² por hoja
-            const m2AjustadoPorHoja = Math.max(0.5, m2PorHoja);
-            console.log('M² ajustados por hoja:', m2AjustadoPorHoja.toFixed(2));
-            
-            // Calcular precio total ajustado
-            const m2TotalAjustado = m2AjustadoPorHoja * ventana.hojas;
-            console.log('M² totales ajustados:', m2TotalAjustado.toFixed(2));
-            
-            precioExtraVentana = m2TotalAjustado * extra.precio * ventana.unidades;
-            console.log('Precio por unidad:', (precioExtraVentana/ventana.unidades).toFixed(2));
-            console.log('Precio total ventana:', precioExtraVentana.toFixed(2));
-        } else {
-            // Si es precio fijo por unidad
-            precioExtraVentana = extra.precio * ventana.unidades;
-            console.log('Precio fijo por unidad:', extra.precio);
-            console.log(`Cálculo: ${ventana.unidades} unidades × ${extra.precio}€`);
-            console.log('Precio total ventana:', precioExtraVentana.toFixed(2));
-        }
-        
-        precioTotal += precioExtraVentana;
-        console.groupEnd();
-    });
-    
-    if (tipoExtra === 'instalacion') {
-        console.log('----------------------------------------');
-        console.log('Resumen de instalación:');
-        ventanasPrueba.forEach(ventana => {
-            console.log(`${ventana.referencia}: ${ventana.unidades} unidades × 50€ = ${ventana.unidades * 50}€`);
-        });
-        console.log('----------------------------------------');
-    }
-    
-    console.log('Precio total del extra:', precioTotal.toFixed(2));
-    console.groupEnd();
-    
-    return precioTotal;
+        return total + precioVentana;
+    }, 0);
+}
+
+function calcularPrecioExtraPorM2(ventana, m2Total, precioBase) {
+    const m2PorHoja = m2Total / ventana.hojas;
+    const m2AjustadoPorHoja = Math.max(0.5, m2PorHoja);
+    const m2TotalAjustado = m2AjustadoPorHoja * ventana.hojas;
+    return m2TotalAjustado * precioBase * ventana.unidades;
 }
 
 // Asegurarnos de que el evento change está correctamente configurado
@@ -869,7 +684,7 @@ checkboxes.forEach((checkbox) => {
         console.log('Checkbox cambiado:', event.target.id);
         const isChecked = event.target.checked;
         const tipoExtra = event.target.id;
-        const precioExtra = calcularPrecioExtra(tipoExtra);
+        const precioExtra = calcularPrecioExtra(tipoExtra, ventanasPrueba, CONFIG);
         const label = event.target.nextElementSibling;
         
         console.log('Resultado del cálculo:', precioExtra);
@@ -880,12 +695,12 @@ checkboxes.forEach((checkbox) => {
             label.textContent = "Activar";
         }
         
-        actualizarPrecioTotalYResumen();
+        actualizarPrecioTotalYResumen(selects, checkboxes, CONFIG);
     });
 });
 
 // Llama a la función al cargar la página para mostrar el resumen inicial
-actualizarPrecioTotalYResumen();
+actualizarPrecioTotalYResumen(selects, checkboxes, CONFIG);
 
 function agregarVentana() {
     const referencia = referenciaInput.value.trim();
@@ -912,47 +727,16 @@ function agregarVentana() {
 }
 
 function actualizarListaVentanas() {
-    listaVentanas.innerHTML = '';
+    const template = ventana => `
+        <div class="col">
+            <div class="card h-100" style="max-width: 150px">
+                ${generarMiniatura(ventana)}
+                ${generarCardBody(ventana)}
+            </div>
+        </div>
+    `;
     
-    ventanasPrueba.forEach((ventana, index) => {
-        const col = document.createElement('div');
-        col.className = 'col';
-        
-        const card = document.createElement('div');
-        card.className = 'card h-100';
-        card.style.maxWidth = '150px';
-        
-        const miniatura = ventanaCanvas.crearMiniatura(
-            ventana.ancho,
-            ventana.alto,
-            ventana.tipo,
-            ventana.mano,
-            ventana.referencia
-        );
-        miniatura.className = 'card-img-top';
-        miniatura.style.height = '100px';
-        miniatura.style.objectFit = 'contain';
-        
-        const precioTotal = ventana.precio * ventana.unidades;
-        const metrosCuadrados = (ventana.ancho * ventana.alto / 1000000).toFixed(2); // Convertir mm² a m²
-        
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body p-2';
-        cardBody.innerHTML = `
-            <p class="card-text small mb-1">Ref: ${ventana.referencia}</p>
-            <p class="card-text small mb-1">${ventana.ancho}x${ventana.alto}</p>
-            <p class="card-text small mb-1">${ventana.tipo}</p>
-            <p class="card-text small mb-1">Unidades: ${ventana.unidades}</p>
-            <p class="card-text small mb-1">m²: ${metrosCuadrados} m²</p>
-            <p class="card-text small mb-1">Precio/u: ${ventana.precio.toFixed(2)} €</p>
-            <p class="card-text small mb-1 text-primary fw-bold">Total: ${precioTotal.toFixed(2)} €</p>
-        `;
-        
-        card.appendChild(miniatura);
-        card.appendChild(cardBody);
-        col.appendChild(card);
-        listaVentanas.appendChild(col);
-    });
+    listaVentanas.innerHTML = ventanasPrueba.map(template).join('');
 }
 
 // Función para editar unidades
